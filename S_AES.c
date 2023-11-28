@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MODULUS 0b10011 // x^4 + x + 1 in binary
 
@@ -185,62 +186,49 @@ unsigned short ENC(unsigned short plaintext, unsigned short key)
     return cipher;
 }
 
-char charToDigit(char c)
-{
-    if (c >= '0' && c <= '9')
-    {
-        return c - '0';
-    }
-    else if (c >= 'A' && c <= 'F')
-    {
-        return 10 + (c - 'A');
-    }
-    else if (c >= 'a' && c <= 'f')
-    {
-        return 10 + (c - 'a');
-    }
-    else
-    {
-        fprintf(stderr, "Invalid character in hexadecimal string: %c\n", c);
-        return -1; // Signal an error
-    }
-}
-
-short hexStringToShort(const char *str)
-{
-    short result = 0;
-
-    while (*str != '\0')
-    {
-        int digit = charToDigit(*str);
-        if (digit == -1)
-        {
-            return -1; // Error occurred
-        }
-
-        result = (result << 4) | digit; // Shift and combine
-        str++;
-    }
-
-    return result;
-}
-
 int main(int argc, char *argv[])
 {
+    if (argc != 4)
+    {
+        printf("wrong number of arguments\n");
+        return -1;
+    }
 
-    unsigned short key = hexStringToShort(argv[2]);
-    unsigned short text = hexStringToShort(argv[3]);
+    unsigned short key = (unsigned short)strtol(argv[2], NULL, 16);
+    unsigned short text = (unsigned short)strtol(argv[3], NULL, 16);
+
+    char keyString[4];
+    strcpy(keyString, argv[2]);
+    char *keyEndptr;
+    long keyValue = strtol(keyString, &keyEndptr, 16);
+
+    if (*keyEndptr != '\0')
+    {
+        printf("non-hex character is found.\n");
+        return -1;
+    }
+
+    char textString[4];
+    strcpy(textString, argv[3]);
+    char *textEndptr;
+    long textValue = strtol(textString, &textEndptr, 16);
+
+    if (*textEndptr != '\0')
+    {
+        printf("non-hex character is found.\n");
+        return -1;
+    }
 
     if (strcmp(argv[1], "ENC") == 0)
     {
         unsigned short cipher = ENC(text, key);
-        printf("0X%04X\n", cipher);
+        printf("%04X\n", cipher);
     }
 
     else if (strcmp(argv[1], "DEC") == 0)
     {
         unsigned short plaintext = DEC(text, key);
-        printf("0X%04X\n", plaintext);
+        printf("%04X\n", plaintext);
     }
 
     return 0;
